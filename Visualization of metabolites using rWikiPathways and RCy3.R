@@ -76,3 +76,6 @@ toggleGraphicsDetails()
 loadTableData(mSet.map.table.graphId.log2FC, data.key.column = "mSet.graphIds", table.key.column = "GraphID")
 node.colors <- c(rev(brewer.pal(length(data.values), "RdBu")))
 setNodeColorMapping("log2FC", data.values, node.colors, default.color = "#FFFFFF", style.name = "WikiPathways")
+
+#I've got errors from following line
+#setNodeColorBypass(node.names = mSet.map.table.graphId.log2FC$Query[mSet.graphIds=="NA"], new.colors = "#FFFFFF")
