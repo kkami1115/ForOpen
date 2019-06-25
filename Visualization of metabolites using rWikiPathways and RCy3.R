@@ -1,37 +1,67 @@
-##Visualization of metabolite accumulation using pathway taken from Wikipathways
-##Ken Kamiya, wrote at 2019/06/25
+#Visualization of metabolite accumulation using pathway taken from Wikipathways
+#Ken Kamiya, wrote at 2019/06/25
 
-#prepare these packages
-install.packages(C("rWikipathways", "RCy3"))
+#To visualize the increase or decrease of the metabolites using pathway in WikiPathways.
+
+##Wait a minute for R Markdown##
+
+#I used these assets.
+#Pathway -> AtMetExpress Overview - Wikipathways https://www.wikipathways.org/index.php/Pathway:WP3622
+#Metabolite data -> AraMetLeaves - attached to DiffCorr package
+#The Arabidopsis metabolome of the aerial regions of individual WT plants and the mto1 and tt4 mutants were analyzed by GC-TOF/MS.
+#mto1 shows strong methionine accumulation.
+#DiffCorr -> https://cran.r-project.org/package=DiffCorr
+#Reference of metabolite data -> M. Kusano et al, (2007) https://doi.org/10.1186/1752-0509-1-53
+
+
+
+### Step 1. Prepare packages and dataset ###
+
+#Prepare these packages and install "Wikipathways" app to Cytoscape
+if(!"rWikiPathways" %in% installed.packages()){
+    if (!requireNamespace("BiocManager", quietly=TRUE))
+        install.packages("BiocManager")
+    BiocManager::install("rWikiPathways")
+}
 library(rWikiPathways)
+if(!"RCy3" %in% installed.packages()){
+    if (!requireNamespace("BiocManager", quietly=TRUE))
+        install.packages("BiocManager")
+    BiocManager::install("RCy3")
+}
 library(RCy3)
 
-#get graphIDs from certain pathway from WikiPathway
-xrefs <- getXrefList(pathway="WP3622", systemCode="Ck")
-xrefs.graphIds = NULL
-for(i in 1:length(xrefs)){
-  pathways <- findPathwaysByXref(xrefs[[i]], systemCode="Ck") 
-  targeted.pathway <- pathways[purrr::map_lgl(pathways, ~ .$id == "WP3622")][[1]]
-  xrefs.graphIds[[i]] <- as.character(targeted.pathway$fields$graphId$values)
-}
+installApp('WikiPathways')  #only available in Cytoscape 3.7.0 and above
 
-
-#prepare MetaboAnalystR
+#Prepare MetaboAnalystR
 install.packages("pacman")
 library(pacman)
 pacman::p_load(Rserve, ellipse, scatterplot3d, Cairo, randomForest, caTools, e1071, som, impute, pcaMethods, RJSONIO, ROCR, globaltest, GlobalAncova, Rgraphviz, preprocessCore, genefilter, pheatmap, SSPA, sva, Rcpp, pROC, data.table, limma, car, fitdistrplus, lars, Hmisc, magrittr, methods, xtable, pls, caret, lattice, igraph, gplots, KEGGgraph, reshape, RColorBrewer, tibble, siggenes, plotly, xcms, CAMERA, fgsea, MSnbase, BiocParallel, metap, reshape2, scales)
-
 install.packages("devtools")
 library(devtools)
 devtools::install_github("xia-lab/MetaboAnalystR", build = TRUE, build_opts = c("--no-resave-data", "--no-manual", "--no-build-vignettes"))
 library(MetaboAnalystR)
 
-
-#prepare metabolite data
+#Prepare metabolite data
+install.packages("DiffCorr")
 library(DiffCorr)
-data("AraMetLeaves") #可視化用データ用意
+data("AraMetLeaves") #data for visualization
 
-##get metabolite ids lists using MetaboAnalystR
+
+
+### Step 2. Gather information necessary for visualization ###
+
+#Get graphIds from certain pathway from WikiPathway
+#https://www.wikipathways.org/index.php/Help:WikiPathways_Webservice/API#GraphId
+pathway.ChEBIIDs <- getXrefList(pathway="WP3622", systemCode="Ce")
+pathway.graphIds = NULL
+for(i in 1:length(pathway.ChEBIIDs)){
+  pathways <- findPathwaysByXref(pathway.ChEBIIDs[[i]], systemCode="Ce") 
+  targeted.pathway <- pathways[purrr::map_lgl(pathways, ~ .$id == "WP3622")][[1]]
+  pathway.graphIds[[i]] <- as.character(targeted.pathway$fields$graphId$values)
+}
+
+#Get metabolite ids lists using MetaboAnalystR
 mSet<-InitDataObjects("NA", "utils", FALSE)
 cmpd.vec<- rownames(AraMetLeaves)
 mSet<-Setup.MapData(mSet, cmpd.vec);
@@ -44,7 +74,7 @@ mSet<-PerformDetailMatch(mSet, "D-Glucose-6-phosphate");
 mSet<-GetCandidateList(mSet);
 mSet<-SetCandidate(mSet, "D-Glucose-6-phosphate", "Beta-D-Glucose 6-phosphate");
 
-##get graphIDs from prepared metabolite data
+#Extract metabolites with graphID in the pathway
 mSet.map.table = mSet$dataSet$map.table
 mSet.graphIds = NULL
 for(i in 1:length(mSet.map.table[,"ChEBI"])){
@@ -58,21 +88,26 @@ for(i in 1:length(mSet.map.table[,"ChEBI"])){
   }
 }
 
-##Calculate log2FC from Col0.1 and mto1.1
+#Calculate log2FC from Col0.1 and mto1.1
 log2FC = log2(AraMetLeaves[,"mto1.1"] / AraMetLeaves[,"Col0.1"])
 min.log2FC = min(log2FC,na.rm=TRUE)
 max.log2FC = max(log2FC,na.rm=TRUE)
 abs.log2FC = max(abs(min.log2FC),max.log2FC)
 data.values = c(-abs.log2FC,0,abs.log2FC)
 
-##make matrix
+##Make matrix
 mSet.map.table.graphId.log2FC = data.frame(mSet.map.table, mSet.graphIds, log2FC)
 
 
-#connect to Cytoscape and visualize content of metabolites
+
+### Step 3. Connect to Cytoscape and visalization ###
+
+#Connect to Cytoscape
 cytoscapePing()
+#Toss the pathway to Cytoscape
 RCy3::commandsRun('wikipathways import-as-pathway id=WP3622') 
 toggleGraphicsDetails()
+#load metabolite data and visualize 
 loadTableData(mSet.map.table.graphId.log2FC, data.key.column = "mSet.graphIds", table.key.column = "GraphID")
 node.colors <- c(rev(brewer.pal(length(data.values), "RdBu")))
 setNodeColorMapping("log2FC", data.values, node.colors, default.color = "#FFFFFF", style.name = "WikiPathways")
