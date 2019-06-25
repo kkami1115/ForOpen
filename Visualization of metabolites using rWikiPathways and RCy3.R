@@ -51,7 +51,7 @@ data("AraMetLeaves") #data for visualization
 
 ### Step 2. Gather information necessary for visualization ###
 
-#Get graphIds from certain pathway from WikiPathway
+#Get graphIds from focused pathway
 #https://www.wikipathways.org/index.php/Help:WikiPathways_Webservice/API#GraphId
 pathway.ChEBIIDs <- getXrefList(pathway="WP3622", systemCode="Ce")
 pathway.graphIds = NULL
