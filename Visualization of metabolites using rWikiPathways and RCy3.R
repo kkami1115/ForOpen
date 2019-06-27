@@ -14,6 +14,11 @@
 #Reference of metabolite data -> M. Kusano et al, (2007) https://doi.org/10.1186/1752-0509-1-53
 
 
+### Step 0. Install Cytoscape ###
+#Before you run this script, you must install Cytoscape.
+# https://cytoscape.org/download.html
+#If you haven't, install this app from this link.
+
 
 ### Step 1. Prepare packages and dataset ###
 
