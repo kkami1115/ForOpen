@@ -18,7 +18,7 @@
 #Before you run this script, you must install Cytoscape.
 # https://cytoscape.org/download.html
 #If you haven't, install this app from this link.
-
+#The following script only works if you have launched Cytoscape.
 
 ### Step 1. Prepare packages and dataset ###
 
@@ -58,10 +58,11 @@ data("AraMetLeaves") #data for visualization
 
 #Get graphIds from focused pathway
 #https://www.wikipathways.org/index.php/Help:WikiPathways_Webservice/API#GraphId
-pathway.ChEBIIDs <- getXrefList(pathway="WP3622", systemCode="Ce")
-pathway.graphIds = NULL
-for(i in 1:length(pathway.ChEBIIDs)){
-  pathways <- findPathwaysByXref(pathway.ChEBIIDs[[i]], systemCode="Ce") 
+#get graphIds from pathway
+pathway.HMDBIDs <- getXrefList(pathway="WP3622", systemCode="Ch")
+pathway.graphIds <-  NULL
+for(i in 1:length(pathway.HMDBIDs)){
+  pathways <- findPathwaysByXref(pathway.HMDBIDs[[i]], systemCode="Ch") 
   targeted.pathway <- pathways[purrr::map_lgl(pathways, ~ .$id == "WP3622")][[1]]
   pathway.graphIds[[i]] <- as.character(targeted.pathway$fields$graphId$values)
 }
@@ -79,19 +80,21 @@ mSet<-PerformDetailMatch(mSet, "D-Glucose-6-phosphate");
 mSet<-GetCandidateList(mSet);
 mSet<-SetCandidate(mSet, "D-Glucose-6-phosphate", "Beta-D-Glucose 6-phosphate");
 
+
 #Extract metabolites with graphID in the pathway
-mSet.map.table = mSet$dataSet$map.table
-mSet.graphIds = NULL
-for(i in 1:length(mSet.map.table[,"ChEBI"])){
-  pathways <- findPathwaysByXref(mSet.map.table[,"ChEBI"][[i]], systemCode="Ce")
-  targeted.pathway = pathways[purrr::map_lgl(pathways, ~ .$id == "WP3622")]
-  if(length(targeted.pathway)==0){
-    mSet.graphIds[[i]] = "NA"
+mSet.map.table <- mSet$dataSet$map.table
+mSet.graphIds <- NULL
+for(i in 1:length(mSet.map.table[,"HMDB"])){
+  pathways <- findPathwaysByXref(mSet.map.table[,"HMDB"][[i]], systemCode="Ch")
+  targeted.pathway <- pathways[purrr::map_lgl(pathways, ~ .$id == "WP3622")]
+  if(length(targeted.pathway) == 0){
+    mSet.graphIds[[i]] <- "NA"
   }
-  if(!length(targeted.pathway)==0){
+  if(!length(targeted.pathway) == 0){
     mSet.graphIds[[i]] <- targeted.pathway[[1]]$fields$graphId$values
   }
 }
+
 
 #Calculate log2FC from Col0.1 and mto1.1
 log2FC = log2(AraMetLeaves[,"mto1.1"] / AraMetLeaves[,"Col0.1"])
@@ -117,5 +120,5 @@ loadTableData(mSet.map.table.graphId.log2FC, data.key.column = "mSet.graphIds", 
 node.colors <- c(rev(brewer.pal(length(data.values), "RdBu")))
 setNodeColorMapping("log2FC", data.values, node.colors, default.color = "#FFFFFF", style.name = "WikiPathways")
 
-#I've got errors from following line
-#setNodeColorBypass(node.names = mSet.map.table.graphId.log2FC$Query[mSet.graphIds=="NA"], new.colors = "#FFFFFF")
+setNodeBorderColorBypass(node.names = "Methionine", new.colors = "#FF0000")
+setNodeBorderWidthBypass(node.names = "Methionine", new.sizes = 10)
