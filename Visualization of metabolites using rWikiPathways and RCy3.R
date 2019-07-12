@@ -94,12 +94,15 @@ for(i in 1:length(mSet.map.table[,"ChEBI"])){
 }
 
 #Calculate log2FC from Col0.1 and mto1.1
-log2FC = log2(AraMetLeaves[,"mto1.1"] / AraMetLeaves[,"Col0.1"])
-min.log2FC = min(log2FC,na.rm=TRUE)
-max.log2FC = max(log2FC,na.rm=TRUE)
-abs.log2FC = max(abs(min.log2FC),max.log2FC)
-data.values = c(-abs.log2FC,0,abs.log2FC)
-
+Col0.index <- grep("Col0", colnames(AraMetLeaves), perl = TRUE)
+mto1.index <- grep("mto1", colnames(AraMetLeaves), perl = TRUE)
+Col0Mean <-  apply(AraMetLeaves[, Col0.index], 1, mean)
+mto1Mean <-  apply(AraMetLeaves[, mto1.index], 1, mean)
+log2FC <-  log2(mto1Mean / Col0Mean)
+min.log2FC <-  min(log2FC, na.rm = TRUE)
+max.log2FC <-  max(log2FC, na.rm = TRUE)
+abs.log2FC <-  max(abs(min.log2FC), max.log2FC)
+data.values <-  c(-abs.log2FC, 0, abs.log2FC)
 ##Make matrix
 mSet.map.table.graphId.log2FC = data.frame(mSet.map.table, mSet.graphIds, log2FC)
 
@@ -117,5 +120,10 @@ loadTableData(mSet.map.table.graphId.log2FC, data.key.column = "mSet.graphIds", 
 node.colors <- c(rev(brewer.pal(length(data.values), "RdBu")))
 setNodeColorMapping("log2FC", data.values, node.colors, default.color = "#FFFFFF", style.name = "WikiPathways")
 
-#I've got errors from following line
+#emphasize methionine
+setNodeBorderColorBypass(node.names = "Methionine", new.colors = "#FF0000")
+setNodeBorderWidthBypass(node.names = "Methionine", new.sizes = 10)
+
+
+####I've got errors from following line ###
 #setNodeColorBypass(node.names = mSet.map.table.graphId.log2FC$Query[mSet.graphIds=="NA"], new.colors = "#FFFFFF")
