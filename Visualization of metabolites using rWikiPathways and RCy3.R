@@ -52,11 +52,6 @@ install.packages("DiffCorr")
 library(DiffCorr)
 data("AraMetLeaves") #data for visualization
 
-Col0.index <- grep("Col0", colnames(AraMetLeaves), perl = TRUE)
-mto1.index <- grep("mto1", colnames(AraMetLeaves), perl = TRUE)
-Col0Mean <-  apply(AraMetLeaves[, Col0.index], 1, mean)
-mto1Mean <-  apply(AraMetLeaves[, mto1.index], 1, mean)
-
 
 
 ### Step 2. Gather information necessary for visualization ###
@@ -101,15 +96,16 @@ for(i in 1:length(mSet.map.table[,"HMDB"])){
 }
 
 
-#Calculate log2FC from Col0 and mto1
-log2FC <-  log2(mto1Mean / Col0Mean)
-min.log2FC <-  min(log2FC, na.rm = TRUE)
-max.log2FC <-  max(log2FC, na.rm = TRUE)
-abs.log2FC <-  max(abs(min.log2FC), max.log2FC)
-data.values <-  c(-abs.log2FC, 0, abs.log2FC)
+#Calculate log2FC from Col0.1 and mto1.1
+log2FC = log2(AraMetLeaves[,"mto1.1"] / AraMetLeaves[,"Col0.1"])
+min.log2FC = min(log2FC,na.rm=TRUE)
+max.log2FC = max(log2FC,na.rm=TRUE)
+abs.log2FC = max(abs(min.log2FC),max.log2FC)
+data.values = c(-abs.log2FC,0,abs.log2FC)
 
-#Make matrix
-mSet.map.table.graphId.log2FC <-  data.frame(mSet.map.table, mSet.graphIds, log2FC)
+##Make matrix
+mSet.map.table.graphId.log2FC = data.frame(mSet.map.table, mSet.graphIds, log2FC)
+
 
 
 ### Step 3. Connect to Cytoscape and visalization ###
