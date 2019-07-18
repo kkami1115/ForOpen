@@ -20,6 +20,9 @@
 #If you haven't, install this app from this link.
 
 
+#### From here, please run with Cytoscape running ####
+
+
 ### Step 1. Prepare packages and dataset ###
 
 #Prepare these packages and install "Wikipathways" app to Cytoscape
@@ -36,7 +39,7 @@ if(!"RCy3" %in% installed.packages()){
 }
 library(RCy3)
 
-installApp('WikiPathways')  #only available in Cytoscape 3.7.0 and above
+RCy3::installApp('WikiPathways')  #only available in Cytoscape 3.7.0 and above
 
 #Prepare MetaboAnalystR
 install.packages("pacman")
@@ -58,13 +61,14 @@ data("AraMetLeaves") #data for visualization
 
 #Get graphIds from focused pathway
 #https://www.wikipathways.org/index.php/Help:WikiPathways_Webservice/API#GraphId
-pathway.ChEBIIDs <- getXrefList(pathway="WP3622", systemCode="Ce")
+pathway.ChEBIIDs <- rWikiPathways::getXrefList(pathway="WP3622", systemCode="Ce")
 pathway.graphIds = NULL
 for(i in 1:length(pathway.ChEBIIDs)){
-  pathways <- findPathwaysByXref(pathway.ChEBIIDs[[i]], systemCode="Ce") 
+  pathways <- rWikiPathways::findPathwaysByXref(pathway.ChEBIIDs[[i]], systemCode="Ce") 
   targeted.pathway <- pathways[purrr::map_lgl(pathways, ~ .$id == "WP3622")][[1]]
   pathway.graphIds[[i]] <- as.character(targeted.pathway$fields$graphId$values)
 }
+
 
 #Get metabolite ids lists using MetaboAnalystR
 mSet<-InitDataObjects("NA", "utils", FALSE)
@@ -83,7 +87,7 @@ mSet<-SetCandidate(mSet, "D-Glucose-6-phosphate", "Beta-D-Glucose 6-phosphate");
 mSet.map.table = mSet$dataSet$map.table
 mSet.graphIds = NULL
 for(i in 1:length(mSet.map.table[,"ChEBI"])){
-  pathways <- findPathwaysByXref(mSet.map.table[,"ChEBI"][[i]], systemCode="Ce")
+  pathways <- rWikiPathways::findPathwaysByXref(mSet.map.table[,"ChEBI"][[i]], systemCode="Ce")
   targeted.pathway = pathways[purrr::map_lgl(pathways, ~ .$id == "WP3622")]
   if(length(targeted.pathway)==0){
     mSet.graphIds[[i]] = "NA"
@@ -111,19 +115,19 @@ mSet.map.table.graphId.log2FC = data.frame(mSet.map.table, mSet.graphIds, log2FC
 ### Step 3. Connect to Cytoscape and visalization ###
 
 #Connect to Cytoscape
-cytoscapePing()
+RCy3::cytoscapePing()
 #Toss the pathway to Cytoscape
 RCy3::commandsRun('wikipathways import-as-pathway id=WP3622') 
-toggleGraphicsDetails()
-#load metabolite data and visualize 
-loadTableData(mSet.map.table.graphId.log2FC, data.key.column = "mSet.graphIds", table.key.column = "GraphID")
+RCy3::toggleGraphicsDetails()
+#load metabolite data and visualize
+RCy3::loadTableData(mSet.map.table.graphId.log2FC, data.key.column = "mSet.graphIds", table.key.column = "GraphID")
 node.colors <- c(rev(brewer.pal(length(data.values), "RdBu")))
-setNodeColorMapping("log2FC", data.values, node.colors, default.color = "#FFFFFF", style.name = "WikiPathways")
+RCy3::setNodeColorMapping("log2FC", data.values, node.colors, default.color = "#FFFFFF", style.name = "WikiPathways")
 
 #emphasize methionine
-setNodeBorderColorBypass(node.names = "Methionine", new.colors = "#FF0000")
-setNodeBorderWidthBypass(node.names = "Methionine", new.sizes = 10)
+RCy3::setNodeBorderColorBypass(node.names = "Methionine", new.colors = "#FF0000")
+RCy3::setNodeBorderWidthBypass(node.names = "Methionine", new.sizes = 10)
 
 
 ####I've got errors from following line ####
-setNodeColorBypass(node.names = mSet.map.table.graphId.log2FC$Query[mSet.graphIds=="NA"], new.colors = "#FFFFFF")
+RCy3::setNodeColorBypass(node.names = mSet.map.table.graphId.log2FC$Query[mSet.graphIds=="NA"], new.colors = "#FFFFFF")
