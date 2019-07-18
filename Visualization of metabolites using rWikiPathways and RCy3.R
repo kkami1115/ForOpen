@@ -125,5 +125,5 @@ setNodeBorderColorBypass(node.names = "Methionine", new.colors = "#FF0000")
 setNodeBorderWidthBypass(node.names = "Methionine", new.sizes = 10)
 
 
-####I've got errors from following line ###
-#setNodeColorBypass(node.names = mSet.map.table.graphId.log2FC$Query[mSet.graphIds=="NA"], new.colors = "#FFFFFF")
+####I've got errors from following line ####
+setNodeColorBypass(node.names = mSet.map.table.graphId.log2FC$Query[mSet.graphIds=="NA"], new.colors = "#FFFFFF")
