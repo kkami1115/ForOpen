@@ -126,8 +126,11 @@ RCy3::setNodeColorMapping("log2FC", data.values, node.colors, default.color = "#
 
 #emphasize methionine
 RCy3::setNodeBorderColorBypass(node.names = "Methionine", new.colors = "#FF0000")
-RCy3::setNodeBorderWidthBypass(node.names = "Methionine", new.sizes = 10)
+RCy3::setNodeBorderWidthBypass(node.names = "Methionine", new.sizes = 7)
 
+table = RCy3::getTableColumns()
+conv.table= table$name
+names(conv.table) = table$GraphID
 
-####I've got errors from following line ####
-RCy3::setNodeColorBypass(node.names = mSet.map.table.graphId.log2FC$Query[mSet.graphIds=="NA"], new.colors = "#FFFFFF")
+#Gray out metabolite nodes without data
+RCy3::setNodeColorBypass(node.names = conv.table[setdiff(pathway.graphIds, mSet.graphIds)], new.colors = "#c0c0c0")
